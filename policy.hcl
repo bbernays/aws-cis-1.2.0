@@ -126,11 +126,10 @@ policy "cis-v1.20" {
 
     query "1.14" {
       description = "AWS CIS 1.14 Ensure hardware MFA is enabled for the 'root' account (Scored)"
-      expect_output = true
       query =<<EOF
-      SELECT aiu.account_id, arn, password_last_used, aiu.user_name, mfa_active FROM aws_iam_users as aiu
-      JOIN aws_iam_virtual_mfa_devices ON aws_iam_virtual_mfa_devices.user_arn = aiu.arn
-      WHERE aiu.user_name = '<root_account>' AND aiu.mfa_active
+      SELECT aiu.account_id, arn, max(password_last_used) as password_last_used  FROM aws_iam_users as aiu
+      LEFT JOIN aws_iam_virtual_mfa_devices ON aws_iam_virtual_mfa_devices.user_arn = aiu.arn
+      WHERE aiu.user_name = '<root_account>' AND aiu.mfa_active = false group by aiu.account_id, arn
     EOF
     }
 
